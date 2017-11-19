@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Piece : MonoBehaviour {
-    private Vector3 _moveDirection = Vector3.zero;
     private bool _isMoving = true;
     private int height = 0;
     private int width = 0;
-    double timeSinceUpdate = 0;
-    bool tick = false;
 
-    private int speed = 1;
+    public delegate void PieceLand();
+    public static event PieceLand OnPieceLanded;
+
 
     public int Height
     {
@@ -38,80 +37,76 @@ public class Piece : MonoBehaviour {
         }
     }
 
+    void OnEnable()
+    {
+        Ticker.OnTick += OnTick;
+    }
+
+
+    void OnDisable()
+    {
+        Ticker.OnTick -= OnTick;
+    }
+
+    void OnTick()
+    {
+        Vector3 moveDirection = new Vector3(0.0f, -1.0f, 0.0f);
+        Move(moveDirection);
+    }
+
     // Update is called once per frame
     void Update()
     {
-        tick = false;
-        timeSinceUpdate += Time.deltaTime;
+        ListenForKeys();
+    }
 
-        if (timeSinceUpdate >= (GameManager.instance.tickDuration / speed))
-        {
-            tick = true;
-            timeSinceUpdate -= (GameManager.instance.tickDuration / speed);
-        }
-
+    void ListenForKeys()
+    {
         if (_isMoving)
         {
-            Move();
+            if (Input.GetKeyDown(KeyCode.LeftArrow) && CanMoveInDirection(new Vector3(-1, 0, 0)))
+            {
+                Vector3 moveDirection = new Vector3(-1.0f, 0.0f, 0.0f);
+                Move(moveDirection);
+            }
+            else if (Input.GetKeyDown(KeyCode.RightArrow) && CanMoveInDirection(new Vector3(1, 0, 0)))
+            {
+                Vector3 moveDirection = new Vector3(1.0f, 0.0f, 0.0f);
+                Move(moveDirection);
+            }
+            else if (Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                RotateClockwise();
+                if (!CanMoveInDirection(Vector3.zero))
+                {
+                    RotateCounterClockwise();
+                }
+            }
         }
     }
 
-    void Move()
+    void Move(Vector3 moveDirection)
     {
-        _moveDirection = Vector3.zero;
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow) && CanMoveInDirection(new Vector3(-1, 0, 0)))
-        {
-            _moveDirection = new Vector3(-1.0f, 0.0f, 0.0f);
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow) && CanMoveInDirection(new Vector3(1, 0, 0)))
-        {
-            _moveDirection = new Vector3(1.0f, 0.0f, 0.0f);
-        } else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            speed = 5;
-        } else if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            RotateClockwise();
-            if (! CanMoveInDirection(Vector3.zero))
-            {
-                RotateCounterClockwise();
-            }
-            //transform.Rotate(new Vector3(0, 0, 90));
-        }
-
-        if (Input.GetKeyUp(KeyCode.DownArrow))
-        {
-            speed = 1;
-        }
-
-        _moveDirection = transform.TransformDirection(_moveDirection);
-        //_moveDirection.y -= 3.0f * Time.deltaTime;
-        if (tick)
-        {
-            _moveDirection.y -= 1.0f;
-        }
-
+        moveDirection = transform.TransformDirection(moveDirection);
         Vector3 pos = gameObject.transform.position;
-        pos += _moveDirection;
+        pos += moveDirection;
 
-        if (! CanMoveInDirection(_moveDirection))
+        if (! CanMoveInDirection(moveDirection))
         {
             _isMoving = false;
         }
 
         if (! _isMoving)
         {
+            if (OnPieceLanded != null)
+                OnPieceLanded();
             GameManager.instance.BoardManager.AddObject(gameObject);
             transform.DetachChildren();
             Destroy(gameObject);
-            GameManager.instance.SpawnPiece();
-            //Debug.Log(pos);
         } else
         {
             gameObject.transform.position = pos;
         }
-        //rb.MovePosition(transform.position + _moveDirection);
     }
 
     public void RotateClockwise()
@@ -144,7 +139,6 @@ public class Piece : MonoBehaviour {
     {
         for (int i = 0; i < gameObject.transform.childCount; i++)
         {
-            //Debug.Log(gameObject.transform.GetChild(i).position);
             int x = Mathf.FloorToInt(gameObject.transform.GetChild(i).position.x + direction.x);
             int y = Mathf.FloorToInt(gameObject.transform.GetChild(i).position.y + direction.y);
             if (GameManager.instance.BoardManager.IsFull(x, y))

@@ -359,6 +359,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1455239081}
   - component: {fileID: 1455239082}
+  - component: {fileID: 1455239083}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: GameController
@@ -390,10 +391,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec49593aa50f7f42948c8b6f912832b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tickDuration: 0.5
   cubeSize: 1
   boardSize: {x: 10, y: 18}
   spawner: {fileID: 908074971}
+  speed: 1
+--- !u!114 &1455239083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1455239080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce5e6218ac34eaa4c9ba85fcb4ae681d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minTickDuration: 0.05
+  maxTickDuration: 0.5
+  tickStep: 0.05
+  tickDuration: 0.5
 --- !u!1 &2066858826
 GameObject:
   m_ObjectHideFlags: 0

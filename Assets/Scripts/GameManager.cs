@@ -5,62 +5,32 @@ using System.Linq;
 
 public class GameManager : MonoBehaviour {
 
-    //private GameObject _piece;
-
     Object[] prefabs;
-    private float _minTickDuration = 0.05f;
-    private float _maxTickDuration = 0.5f;
-    private float _tickStep = 0.05f;
     private bool _isRunning = true;
     private Dictionary<string, Color> possibleColors;
-    public float tickDuration = 0.5f;
     public BoardManager BoardManager;
     public int cubeSize = 1;
     public Vector2Int boardSize = new Vector2Int(10, 18);
-    int a = 0;
     public GameObject spawner;
-    string n = "a";
-
+    public int speed = 1;
 
     public static GameManager instance = null; //Singleton
 
-    public float MinTickDuration
+    void OnEnable()
     {
-        get
-        {
-            return _minTickDuration;
-        }
-
-        set
-        {
-            _minTickDuration = value;
-        }
+        Ticker.OnTick += OnTick;
+        Piece.OnPieceLanded += SpawnPiece;
     }
 
-    public float MaxTickDuration
+    void OnDisable()
     {
-        get
-        {
-            return _maxTickDuration;
-        }
-
-        set
-        {
-            _maxTickDuration = value;
-        }
+        Ticker.OnTick -= OnTick;
+        Piece.OnPieceLanded -= SpawnPiece;
     }
 
-    public float TickStep
+    void OnTick()
     {
-        get
-        {
-            return _tickStep;
-        }
-
-        set
-        {
-            _tickStep = value;
-        }
+        Debug.Log("Tic Tac");
     }
 
     void Awake()
@@ -91,20 +61,20 @@ public class GameManager : MonoBehaviour {
         SpawnPiece();
     }
 
-    private void Update()
+    void Update()
     {
         if (!_isRunning)
         {
             return;
         }
-        if (Input.GetKeyDown(KeyCode.Plus) || Input.GetKeyDown(KeyCode.KeypadPlus))
-        {
-            tickDuration = Mathf.Max(_minTickDuration, tickDuration - _tickStep);
-        }
 
-        if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
+        if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            tickDuration = Mathf.Min(_maxTickDuration, tickDuration + _tickStep);
+            speed = 5;
+        }
+        else if (Input.GetKeyUp(KeyCode.DownArrow))
+        {
+            speed = 1;
         }
     }
 
@@ -121,13 +91,7 @@ public class GameManager : MonoBehaviour {
     }
 
     void SpawnPiece(GameObject obj)
-    {
-        a++;
-        if (a > 100)
-        {
-            return;
-        }
-        
+    {        
         float height, width, smallestY, largestY, smallestX, largestX;
         height = width = smallestY = largestY = smallestX = largestX = 0;
 
@@ -148,7 +112,6 @@ public class GameManager : MonoBehaviour {
 
         if (!obj.GetComponent<Piece>().CanMoveInDirection(Vector3.zero))
         {
-            Debug.Log("FAIL");
             obj.GetComponent<Piece>().Deactivate();
             GameOver();
             return;
