@@ -9,7 +9,7 @@ public class SpawnRandom : Spawner {
 
     public override GameObject Spawn()
     {
-        Vector2Int[] direction = { new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 0), new Vector2Int(0, -1) };
+        Vector2Int[] direction = { new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 0), new Vector2Int(0, -1) }; // 4 possible directions
         Vector2Int[] pieces = new Vector2Int[4];
         pieces[0] = new Vector2Int(0, 0);
         int i = 0;
@@ -19,7 +19,7 @@ public class SpawnRandom : Spawner {
             List<Vector2Int> possible = direction.Select(vector => vector + pieces[i]).ToList();
             for (int j = 0; j < i + 1; j++)
             {
-                possible.Remove(pieces[j]);
+                possible.Remove(pieces[j]); //remove previously visited
             }
             int chosenDirection = Random.Range(0, possible.Count());
             i++;
@@ -42,13 +42,14 @@ public class SpawnRandom : Spawner {
         return generatedPiece;
     }
 
+    // attempt to recognize shape
     private void AssignColor(GameObject obj)
     {
         int tries = 3;
         string[] signatures = new string[tries];
         var objScript = obj.GetComponent<Piece>();
-        objScript.Normalize();
-        GameObject temp = GameObject.Instantiate(obj);
+        objScript.Normalize(); // normalize local position
+        GameObject temp = GameObject.Instantiate(obj); // clone object to test rotation
         var tempScript = temp.GetComponent<Piece>();
         string signature = objScript.GetSignature();
 
@@ -69,13 +70,13 @@ public class SpawnRandom : Spawner {
         {
             for (int i = 0; i < tries; i++)
             {
-                tempScript.RotateClockwise();
+                tempScript.RotateClockwise(); // try to rotate then normalize and check for signature
                 tempScript.Normalize();
                 signature = tempScript.GetSignature();
                 signatures[i] = signature;
                 if (possibleColors.ContainsKey(signature))
                 {
-                    objScript.SetColor(possibleColors[signature]);
+                    objScript.SetColor(possibleColors[signature]); // set new signature with random color
                     return;
                 }
             }
@@ -91,6 +92,6 @@ public class SpawnRandom : Spawner {
             objScript.SetColor(chosenColor);
         }
 
-        GameObject.Destroy(temp);
+        GameObject.Destroy(temp); //destroy clone
     }
 }

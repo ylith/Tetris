@@ -53,6 +53,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prefabs: []
+  isAi: 0
   cubeSize: 1
   boardSize: {x: 10, y: 18}
   speed: 1

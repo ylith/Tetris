@@ -119,7 +119,7 @@ F:\UnityDocs\Tetris\Temp\UnityVS_bin\Debug\UnityEngine.UIAutomation.xml
 F:\UnityDocs\Tetris\Temp\UnityVS_bin\Debug\UnityEngine.GoogleAudioSpatializer.xml
 F:\UnityDocs\Tetris\Temp\UnityVS_bin\Debug\UnityEngine.HoloLens.xml
 F:\UnityDocs\Tetris\Temp\UnityVS_bin\Debug\UnityEngine.SpatialTracking.xml
-F:\UnityDocs\Tetris\Temp\UnityVS_obj\Debug\Tetris.csprojResolveAssemblyReference.cache
 F:\UnityDocs\Tetris\Temp\UnityVS_obj\Debug\Tetris.csproj.CoreCompileInputs.cache
 F:\UnityDocs\Tetris\Temp\UnityVS_obj\Debug\Assembly-CSharp.dll.dll
 F:\UnityDocs\Tetris\Temp\UnityVS_obj\Debug\Assembly-CSharp.dll.pdb
+F:\UnityDocs\Tetris\Temp\UnityVS_obj\Debug\Tetris.csprojResolveAssemblyReference.cache

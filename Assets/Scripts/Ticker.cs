@@ -16,11 +16,11 @@ public class Ticker : MonoBehaviour {
     {
         _timeSinceUpdate += Time.deltaTime;
 
-        if (_timeSinceUpdate >= (tickDuration / GameManager.instance.speed))
+        if (_timeSinceUpdate >= (tickDuration / GameManager.instance.CurrentSpeed))
         {
             if (OnTick != null)
                 OnTick();
-            _timeSinceUpdate -= (tickDuration / GameManager.instance.speed);
+            _timeSinceUpdate -= (tickDuration / GameManager.instance.CurrentSpeed);
         }
     }
 }

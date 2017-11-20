@@ -2,6 +2,7 @@
 
 public class SpawnPrefab : Spawner {
 
+    // spawn a piece from prefab directory
     public override GameObject Spawn()
     {
         if (GameManager.instance.prefabs.Length == 0)

@@ -31,7 +31,7 @@ public class Piece : MonoBehaviour {
     void OnTick()
     {
         Vector3 moveDirection = new Vector3(0.0f, -GameManager.instance.cubeSize, 0.0f);
-        Move(moveDirection);
+        Move(moveDirection); //attempt to move down
     }
 
     // Update is called once per frame
@@ -42,22 +42,22 @@ public class Piece : MonoBehaviour {
 
     void ListenForKeys()
     {
-        if (_isMoving)
+        if (_isMoving && GameManager.instance.KeysEnabled)
         {
-            if (Input.GetKeyDown(KeyCode.LeftArrow) && CanMoveInDirection(new Vector3(-GameManager.instance.cubeSize, 0, 0)))
+            if (Input.GetKeyDown(KeyCode.LeftArrow) && CanMoveInDirection(new Vector3(-GameManager.instance.cubeSize, 0, 0))) //left
             {
                 Vector3 moveDirection = new Vector3(-GameManager.instance.cubeSize, 0.0f, 0.0f);
                 Move(moveDirection);
             }
-            else if (Input.GetKeyDown(KeyCode.RightArrow) && CanMoveInDirection(new Vector3(GameManager.instance.cubeSize, 0, 0)))
+            else if (Input.GetKeyDown(KeyCode.RightArrow) && CanMoveInDirection(new Vector3(GameManager.instance.cubeSize, 0, 0))) //right
             {
                 Vector3 moveDirection = new Vector3(GameManager.instance.cubeSize, 0.0f, 0.0f);
                 Move(moveDirection);
             }
-            else if (Input.GetKeyDown(KeyCode.UpArrow))
+            else if (Input.GetKeyDown(KeyCode.UpArrow)) //up
             {
                 RotateClockwise();
-                if (!CanMoveInDirection(Vector3.zero))
+                if (!CanMoveInDirection(Vector3.zero)) //is valid rotation
                 {
                     RotateCounterClockwise();
                 }
@@ -76,16 +76,13 @@ public class Piece : MonoBehaviour {
             _isMoving = false;
         }
 
-        if (! _isMoving)
+        if (! _isMoving && interactable) 
         {
-            if (interactable)
-            {
-                if (OnPieceLanded != null)
-                    OnPieceLanded(gameObject);
-                //GameManager.instance.BoardManager.AddObject(gameObject);
-                transform.DetachChildren();
-                Destroy(gameObject);
-            }
+            if (OnPieceLanded != null)
+                OnPieceLanded(gameObject);
+            //GameManager.instance.BoardManager.AddObject(gameObject);
+            transform.DetachChildren();
+            Destroy(gameObject);
 
         } else
         {
@@ -120,7 +117,7 @@ public class Piece : MonoBehaviour {
         {
             return;
         }
-        for (int i = 0; i < gameObject.transform.childCount; i++)
+        for (int i = 0; i < gameObject.transform.childCount; i++) // swap coordinates x -> y, y -> -x
         {
             Vector3 temp = new Vector3(gameObject.transform.GetChild(i).localPosition.y, -gameObject.transform.GetChild(i).localPosition.x,
                 gameObject.transform.GetChild(i).localPosition.z);
@@ -142,6 +139,7 @@ public class Piece : MonoBehaviour {
         }
     }
 
+    // check if  movement is valid for all children
     public bool CanMoveInDirection(Vector3 direction)
     {
         for (int i = 0; i < gameObject.transform.childCount; i++)
@@ -157,6 +155,7 @@ public class Piece : MonoBehaviour {
         return true;
     }
 
+    // check if  movement is valid for all children for custom board
     public bool CanMoveInDirection(Vector3 direction, BoardManager boardManager)
     {
         for (int i = 0; i < gameObject.transform.childCount; i++)
@@ -172,6 +171,7 @@ public class Piece : MonoBehaviour {
         return true;
     }
 
+    // get unique concatenated coordinates of all children sorted by x, then y
     public string GetSignature()
     {
         List<Vector3> coordinates = new List<Vector3>();
@@ -219,6 +219,7 @@ public class Piece : MonoBehaviour {
         return true;
     }
 
+    // normalize local position for all children, so they are all positive
     public void Normalize()
     {
         float smallestX, smallestY;

@@ -31,7 +31,7 @@ public class BoardManager {
             _board[x, y] = child.gameObject;
         }
 
-        if(check)
+        if(check) //skip check for AI
         {
             CheckLines();
         }
@@ -53,7 +53,7 @@ public class BoardManager {
         List<int> linesToClear = new List<int>();
         for (int i = 0; i < boardSize.x; i++)
         {
-            if (Enumerable.Range(0, _board.GetLength(0)).Count(k => _board[k, i] != null) == 10)
+            if (Enumerable.Range(0, _board.GetLength(0)).Count(k => _board[k, i] != null) == boardSize.x) //is row full
             {
                 DeleteLine(i);
                 linesToClear.Add(i);
@@ -62,8 +62,7 @@ public class BoardManager {
 
         if (linesToClear.Count() > 0)
         {
-            //GameObject[,] tempArray = new GameObject[boardSize.x, boardSize.y];
-            int timesShifted = 0;
+            int timesShifted = 0; //shift rows for each clered row
             foreach (var line in linesToClear)
             {
                 for (int j = line + 1 - timesShifted; j < boardSize.y; j++)
@@ -97,7 +96,7 @@ public class BoardManager {
 
     public int[] getHolesByColumn()
     {
-        int[] holes = new int[boardSize.x];
+        int[] holes = new int[boardSize.x]; //number of holes on the board
 
         for (int i = 0; i < boardSize.x; i++)
         {
@@ -139,5 +138,19 @@ public class BoardManager {
         }
 
         return columns;
+    }
+
+    public int getFullLines()
+    {
+        int fullLines = 0;
+        for (int i = 0; i < boardSize.x; i++)
+        {
+            if (Enumerable.Range(0, _board.GetLength(0)).Count(k => _board[k, i] != null) == 10)
+            {
+                fullLines++;
+            }
+        }
+
+        return fullLines;
     }
 }

@@ -7,17 +7,35 @@ public class GameManager : MonoBehaviour {
     public static event PieceSpawned OnPieceSpawn;
     public delegate void GameOver();
     public static event GameOver OnGameOver;
-    public Object[] prefabs;
 
-    private bool _isRunning = true;
+    public Object[] prefabs;
+    public bool isAi = false;
     public BoardManager BoardManager;
     public int cubeSize = 1;
     public Vector2Int boardSize = new Vector2Int(10, 18);
-    private Spawner spawner;
     public int speed = 1;
 
+    private bool _isRunning = true;
+    private int currentSpeed = 1;
+    private Spawner spawner;
+    private bool keysEnabled = true;
+
     public static GameManager instance = null; //Singleton
-    
+
+    public bool KeysEnabled
+    {
+        get {return keysEnabled; }
+
+        set{ keysEnabled = value; }
+    }
+
+    public int CurrentSpeed
+    {
+        get { return currentSpeed; }
+
+        set { currentSpeed = value; }
+    }
+
     void OnLevelWasLoaded(int index)
     {
         InitGame();
@@ -25,6 +43,7 @@ public class GameManager : MonoBehaviour {
 
     void OnEnable()
     {
+        // Attach listeners
         Ticker.OnTick += OnTick;
         Piece.OnPieceLanded += OnPieceLanded;
     }
@@ -48,13 +67,8 @@ public class GameManager : MonoBehaviour {
         else if (instance != this)
             Destroy(gameObject);
 
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject); //do not destroy when changing scene
         InitGame();
-    }
-
-    // Use this for initialization
-    void Start()
-    {
     }
 
     void Update()
@@ -66,20 +80,28 @@ public class GameManager : MonoBehaviour {
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            speed = 5;
+            CurrentSpeed += 1;
+            CurrentSpeed = Mathf.Min(CurrentSpeed, 5);
         }
         else if (Input.GetKeyUp(KeyCode.DownArrow))
         {
-            speed = 1;
+            CurrentSpeed -= 1;
+            CurrentSpeed = Mathf.Max(CurrentSpeed, 1);
         }
     }
 
     void InitGame()
     {
+        speed = 1;
+        currentSpeed = 1;
         _isRunning = true;
         prefabs = Resources.LoadAll("Prefabs");
         BoardManager = new BoardManager(boardSize);
-        AIBehaviour ai = new AIBehaviour();
+        if (isAi)
+        {
+            AIBehaviour ai = new AIBehaviour();
+            keysEnabled = false;
+        }
         SpawnPrefab a = new SpawnPrefab();
         SetSpawner(a);
         SetupCamera();
@@ -89,7 +111,7 @@ public class GameManager : MonoBehaviour {
 
     public void SetSpawner(Spawner spawn)
     {
-        spawner = spawn;
+        spawner = spawn; // set spawn piece algorithm
     }
 
     void SetupCamera()
@@ -131,7 +153,7 @@ public class GameManager : MonoBehaviour {
         obj.GetComponent<Piece>().height = Mathf.RoundToInt(height);
         obj.GetComponent<Piece>().width = Mathf.RoundToInt(width);
 
-        if (!obj.GetComponent<Piece>().CanMoveInDirection(Vector3.zero))
+        if (!obj.GetComponent<Piece>().CanMoveInDirection(Vector3.zero)) //is valid position
         {
             obj.GetComponent<Piece>().Deactivate();
             TriggerGameOver();
@@ -141,6 +163,7 @@ public class GameManager : MonoBehaviour {
     private void TriggerGameOver()
     {
         _isRunning = false;
+
         if (OnGameOver != null)
             OnGameOver();
     }

@@ -3,25 +3,38 @@ using UnityEngine.UI;
 
 public class Menu : MonoBehaviour {
 
-    private GameObject menu;
+    public GameObject menu;
+    public GameObject gameOver;
     public Dropdown pieceGeneration;
 
     private void OnEnable()
     {
         GameManager.OnGameOver += ShowMenu;
         GameManager.OnGameOver += ShowGameOver;
+
+        DontDestroyOnLoad(gameObject);
+        Init();
     }
 
-    // Use this for initialization
-    void Start () {
-        menu = GameObject.Find("Menu");
+    void OnLevelWasLoaded(int index)
+    {
+        Init();
+    }
+
+    void Init()
+    {
+        gameOver.GetComponent<Text>().enabled = false;
         menu.SetActive(false);
-        GameObject.Find("GameOver").GetComponent<Text>().enabled = false;
         pieceGeneration.onValueChanged.AddListener(
             delegate
             {
                 SwitchPieceGeneration();
             });
+    }
+
+    // Use this for initialization
+    void Start () {
+        
     }
 	
 	// Update is called once per frame
@@ -34,7 +47,7 @@ public class Menu : MonoBehaviour {
 
     void ShowGameOver()
     {
-        GameObject.Find("GameOver").GetComponent<Text>().enabled = true;
+        gameOver.GetComponent<Text>().enabled = true;
     }
 
     void ShowMenu()
