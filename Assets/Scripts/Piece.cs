@@ -1,47 +1,27 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Piece : MonoBehaviour {
     private bool _isMoving = true;
-    private int height = 0;
-    private int width = 0;
+    private bool interactable = true;
+    public int height = 0;
+    public int width = 0;
 
-    public delegate void PieceLand();
+    public bool Interactable
+    {
+        get { return interactable; }
+        set{ interactable = value; }
+    }
+
+    public delegate void PieceLand(GameObject me);
     public static event PieceLand OnPieceLanded;
-
-
-    public int Height
-    {
-        get
-        {
-            return height;
-        }
-
-        set
-        {
-            height = value;
-        }
-    }
-
-    public int Width
-    {
-        get
-        {
-            return width;
-        }
-
-        set
-        {
-            width = value;
-        }
-    }
 
     void OnEnable()
     {
         Ticker.OnTick += OnTick;
+        SetDimensions();
     }
-
 
     void OnDisable()
     {
@@ -50,7 +30,7 @@ public class Piece : MonoBehaviour {
 
     void OnTick()
     {
-        Vector3 moveDirection = new Vector3(0.0f, -1.0f, 0.0f);
+        Vector3 moveDirection = new Vector3(0.0f, -GameManager.instance.cubeSize, 0.0f);
         Move(moveDirection);
     }
 
@@ -64,14 +44,14 @@ public class Piece : MonoBehaviour {
     {
         if (_isMoving)
         {
-            if (Input.GetKeyDown(KeyCode.LeftArrow) && CanMoveInDirection(new Vector3(-1, 0, 0)))
+            if (Input.GetKeyDown(KeyCode.LeftArrow) && CanMoveInDirection(new Vector3(-GameManager.instance.cubeSize, 0, 0)))
             {
-                Vector3 moveDirection = new Vector3(-1.0f, 0.0f, 0.0f);
+                Vector3 moveDirection = new Vector3(-GameManager.instance.cubeSize, 0.0f, 0.0f);
                 Move(moveDirection);
             }
-            else if (Input.GetKeyDown(KeyCode.RightArrow) && CanMoveInDirection(new Vector3(1, 0, 0)))
+            else if (Input.GetKeyDown(KeyCode.RightArrow) && CanMoveInDirection(new Vector3(GameManager.instance.cubeSize, 0, 0)))
             {
-                Vector3 moveDirection = new Vector3(1.0f, 0.0f, 0.0f);
+                Vector3 moveDirection = new Vector3(GameManager.instance.cubeSize, 0.0f, 0.0f);
                 Move(moveDirection);
             }
             else if (Input.GetKeyDown(KeyCode.UpArrow))
@@ -85,7 +65,7 @@ public class Piece : MonoBehaviour {
         }
     }
 
-    void Move(Vector3 moveDirection)
+    public void Move(Vector3 moveDirection)
     {
         moveDirection = transform.TransformDirection(moveDirection);
         Vector3 pos = gameObject.transform.position;
@@ -98,15 +78,40 @@ public class Piece : MonoBehaviour {
 
         if (! _isMoving)
         {
-            if (OnPieceLanded != null)
-                OnPieceLanded();
-            GameManager.instance.BoardManager.AddObject(gameObject);
-            transform.DetachChildren();
-            Destroy(gameObject);
+            if (interactable)
+            {
+                if (OnPieceLanded != null)
+                    OnPieceLanded(gameObject);
+                //GameManager.instance.BoardManager.AddObject(gameObject);
+                transform.DetachChildren();
+                Destroy(gameObject);
+            }
+
         } else
         {
             gameObject.transform.position = pos;
         }
+    }
+
+    public void SetDimensions()
+    {
+        float height, width, smallestY, largestY, smallestX, largestX;
+        height = width = smallestY = largestY = smallestX = largestX = 0;
+
+        for (int k = 0; k < gameObject.transform.childCount; k++)
+        {
+            float localY = gameObject.transform.GetChild(k).localPosition.y;
+            float localX = gameObject.transform.GetChild(k).localPosition.x;
+            smallestY = Mathf.Min(localY, smallestY);
+            largestY = Mathf.Max(localY, largestY);
+            smallestX = Mathf.Min(localX, smallestX);
+            largestX = Mathf.Max(localX, largestX);
+        }
+
+        height = (Mathf.Abs(smallestY - largestY) + 1) * GameManager.instance.cubeSize;
+        width = (Mathf.Abs(smallestX - largestX) + 1) * GameManager.instance.cubeSize;
+        this.height = Mathf.RoundToInt(height);
+        this.width = Mathf.RoundToInt(width);
     }
 
     public void RotateClockwise()
@@ -117,7 +122,8 @@ public class Piece : MonoBehaviour {
         }
         for (int i = 0; i < gameObject.transform.childCount; i++)
         {
-            Vector3 temp = new Vector3(gameObject.transform.GetChild(i).localPosition.y, -gameObject.transform.GetChild(i).localPosition.x, gameObject.transform.GetChild(i).localPosition.z);
+            Vector3 temp = new Vector3(gameObject.transform.GetChild(i).localPosition.y, -gameObject.transform.GetChild(i).localPosition.x,
+                gameObject.transform.GetChild(i).localPosition.z);
             gameObject.transform.GetChild(i).localPosition = temp;
         }
     }
@@ -130,7 +136,8 @@ public class Piece : MonoBehaviour {
         }
         for (int i = 0; i < gameObject.transform.childCount; i++)
         {
-            Vector3 temp = new Vector3(-gameObject.transform.GetChild(i).localPosition.y, gameObject.transform.GetChild(i).localPosition.x, gameObject.transform.GetChild(i).localPosition.z);
+            Vector3 temp = new Vector3(-gameObject.transform.GetChild(i).localPosition.y, gameObject.transform.GetChild(i).localPosition.x,
+                gameObject.transform.GetChild(i).localPosition.z);
             gameObject.transform.GetChild(i).localPosition = temp;
         }
     }
@@ -148,6 +155,89 @@ public class Piece : MonoBehaviour {
         }
 
         return true;
+    }
+
+    public bool CanMoveInDirection(Vector3 direction, BoardManager boardManager)
+    {
+        for (int i = 0; i < gameObject.transform.childCount; i++)
+        {
+            int x = Mathf.FloorToInt(gameObject.transform.GetChild(i).position.x + direction.x);
+            int y = Mathf.FloorToInt(gameObject.transform.GetChild(i).position.y + direction.y);
+            if (boardManager.IsFull(x, y))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public string GetSignature()
+    {
+        List<Vector3> coordinates = new List<Vector3>();
+        for (int i = 0; i < gameObject.transform.childCount; i++)
+        {
+            coordinates.Add(gameObject.transform.GetChild(i).localPosition);
+        }
+
+        coordinates = coordinates.OrderBy(o => o.x).ThenBy(c => c.y).ToList();
+        string signature = "";
+        foreach (var coord in coordinates)
+        {
+            signature += coord.x.ToString();
+            signature += coord.y.ToString();
+        }
+
+        return signature;
+    }
+
+    public void SetColor(Color color)
+    {
+        Debug.Log(color);
+        Renderer[] renders = gameObject.GetComponentsInChildren<Renderer>();
+
+        foreach (var renderer in renders)
+        {
+            renderer.material.color = color;
+        }
+    }
+
+    public bool CompareCoordinates(GameObject first, GameObject second)
+    {
+        for (int i = 0; i < first.transform.childCount; i++)
+        {
+            for (int j = 0; j < second.transform.childCount; j++)
+            {
+                if (first.transform.GetChild(i).transform.localPosition.x != second.transform.GetChild(i).localPosition.x ||
+                    first.transform.GetChild(i).transform.localPosition.y != second.transform.GetChild(i).localPosition.y)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public void Normalize()
+    {
+        float smallestX, smallestY;
+        smallestX = smallestY = 0;
+
+        for (int i = 0; i < gameObject.transform.childCount; i++)
+        {
+            smallestX = Mathf.Min(gameObject.transform.GetChild(i).localPosition.x, smallestX);
+            smallestY = Mathf.Min(gameObject.transform.GetChild(i).localPosition.y, smallestY);
+        }
+        smallestX = Mathf.Abs(smallestX);
+        smallestY = Mathf.Abs(smallestY);
+        for (int i = 0; i < gameObject.transform.childCount; i++)
+        {
+            gameObject.transform.GetChild(i).transform.localPosition = new Vector3(
+                gameObject.transform.GetChild(i).localPosition.x + smallestX,
+                gameObject.transform.GetChild(i).localPosition.y + smallestY,
+                0);
+        }
     }
 
     public void Deactivate()

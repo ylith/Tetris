@@ -1,11 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class Spawner : MonoBehaviour {
+abstract public class Spawner {
 
-    delegate void MultiDelegate();
-    MultiDelegate myMultiDelegate;
-
-
+    abstract public GameObject Spawn();
 }

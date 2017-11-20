@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Piece
   - Board
+  - GameOver
   layers:
   - Default
   - TransparentFX

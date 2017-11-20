@@ -6,11 +6,18 @@ public class BoardManager {
 
     private Vector2Int boardSize;
     public GameObject[,] _board;
+    public bool check = true;
 
     public BoardManager(Vector2Int size)
     {
         boardSize = size;
         _board = new GameObject[boardSize.x, boardSize.y];
+        Piece.OnPieceLanded += AddObject;
+    }
+
+    ~BoardManager()
+    {
+        Piece.OnPieceLanded -= AddObject;
     }
 
     public void AddObject(GameObject obj)
@@ -20,12 +27,15 @@ public class BoardManager {
             var child = obj.transform.GetChild(i);
             int x = Mathf.FloorToInt(child.position.x);
             int y = Mathf.FloorToInt(child.position.y);
+            
             _board[x, y] = child.gameObject;
-            //Debug.Log(child.position.x + 5 + " " + child.position.y);
-            //Debug.Log("Added on " + x + " " + y);
         }
 
-        CheckLines();
+        if(check)
+        {
+            CheckLines();
+        }
+
     }
 
     public bool IsFull(int x, int y)
@@ -83,5 +93,51 @@ public class BoardManager {
             Object.Destroy(_board[i, line]);
             _board[i, line] = null;
         }
+    }
+
+    public int[] getHolesByColumn()
+    {
+        int[] holes = new int[boardSize.x];
+
+        for (int i = 0; i < boardSize.x; i++)
+        {
+            int largestTakenY = 0;
+            for (int j = 0; j < boardSize.y; j++)
+            {
+                if (_board[i, j] != null)
+                {
+                    largestTakenY = j;
+                }
+            }
+            for (int j = 0; j < largestTakenY; j++)
+            {
+                if (_board[i, j] == null)
+                {
+                    holes[i] += 1;
+                }
+            }
+        }
+
+        return holes;
+    }
+
+    public int[] getHeightByColumn()
+    {
+        int[] columns = new int[boardSize.x];
+
+        for (int i = 0; i < boardSize.x; i++)
+        {
+            int largestTakenY = 0;
+            for (int j = 0; j < boardSize.y; j++)
+            {
+                if (_board[i, j] != null)
+                {
+                    largestTakenY = j;
+                }
+            }
+            columns[i] = largestTakenY;
+        }
+
+        return columns;
     }
 }
