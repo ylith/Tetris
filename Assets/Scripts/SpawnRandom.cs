@@ -38,7 +38,6 @@ public class SpawnRandom : Spawner {
         generatedPiece.AddComponent<Piece>();
         generatedPiece.GetComponent<Piece>().SetDimensions();
         AssignColor(generatedPiece);
-        generatedPiece.SetActive(true);
         return generatedPiece;
     }
 

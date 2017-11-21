@@ -11,9 +11,10 @@ public class SpawnPrefab : Spawner {
         }
 
         int randIndex = Random.Range(0, GameManager.instance.prefabs.Length - 1);
-        GameObject obj = (GameObject)GameObject.Instantiate(GameManager.instance.prefabs[randIndex],
-            new Vector3(GameManager.instance.boardSize.x + 10, GameManager.instance.boardSize.y + 1, -GameManager.instance.cubeSize), Quaternion.identity);
-        obj.transform.localScale = new Vector3(GameManager.instance.cubeSize, GameManager.instance.cubeSize, 0);
+        GameObject obj = (GameObject)GameObject.Instantiate(GameManager.instance.prefabs[randIndex]);
+        obj.SetActive(false);
+        obj.GetComponent<Piece>().SetDimensions();
+        obj.transform.localScale = new Vector3(GameManager.instance.cubeSize, GameManager.instance.cubeSize, 1.0f);
 
         return obj;
     }

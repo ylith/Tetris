@@ -5,6 +5,10 @@ using UnityEngine;
 public class Piece : MonoBehaviour {
     private bool _isMoving = true;
     private bool interactable = true;
+    private float _largestY;
+    private float _largestX;
+    private float _smallestX;
+    private float _smallestY;
     public int height = 0;
     public int width = 0;
 
@@ -12,6 +16,30 @@ public class Piece : MonoBehaviour {
     {
         get { return interactable; }
         set{ interactable = value; }
+    }
+
+    public float LargestY
+    {
+        get { return _largestY; }
+        private set { _largestY = value; }
+    }
+
+    public float LargestX
+    {
+        get { return _largestX; }
+        private set { _largestX = value; }
+    }
+
+    public float SmallestX
+    {
+        get { return _smallestX; }
+        private set { _smallestX = value; }
+    }
+    
+    public float SmallestY
+    {
+        get { return _smallestY; }
+        private set { _smallestY = value; }
     }
 
     public delegate void PieceLand(GameObject me);
@@ -30,8 +58,11 @@ public class Piece : MonoBehaviour {
 
     void OnTick()
     {
-        Vector3 moveDirection = new Vector3(0.0f, -GameManager.instance.cubeSize, 0.0f);
-        Move(moveDirection); //attempt to move down
+        if (interactable)
+        {
+            Vector3 moveDirection = new Vector3(0.0f, -GameManager.instance.cubeSize, 0.0f);
+            Move(moveDirection); //attempt to move down
+        }
     }
 
     // Update is called once per frame
@@ -109,34 +140,45 @@ public class Piece : MonoBehaviour {
         width = (Mathf.Abs(smallestX - largestX) + 1) * GameManager.instance.cubeSize;
         this.height = Mathf.RoundToInt(height);
         this.width = Mathf.RoundToInt(width);
+        _largestY = largestY;
+        _largestX = largestX;
+        _smallestX = smallestX;
+        _smallestY = smallestY;
+
+    }
+
+    public void Rotate(Vector3 coords)
+    {
+
+        if (height == width)
+        {
+            return;
+        }
+
+        for (int i = 0; i < gameObject.transform.childCount; i++) // swap coordinates x -> y, y -> -x
+        {
+            Vector3 temp = new Vector3(
+                coords.x * gameObject.transform.GetChild(i).localPosition.y,
+                coords.y * gameObject.transform.GetChild(i).localPosition.x,
+                coords.z * gameObject.transform.GetChild(i).localPosition.z);
+            gameObject.transform.GetChild(i).localPosition = temp;
+        }
+
+        SetDimensions();
+        if (gameObject.transform.position.y + _largestY > GameManager.instance.boardSize.y)
+        {
+            Move(new Vector3(0, -_largestY, 0));
+        }
     }
 
     public void RotateClockwise()
     {
-        if (height == width)
-        {
-            return;
-        }
-        for (int i = 0; i < gameObject.transform.childCount; i++) // swap coordinates x -> y, y -> -x
-        {
-            Vector3 temp = new Vector3(gameObject.transform.GetChild(i).localPosition.y, -gameObject.transform.GetChild(i).localPosition.x,
-                gameObject.transform.GetChild(i).localPosition.z);
-            gameObject.transform.GetChild(i).localPosition = temp;
-        }
+        Rotate(new Vector3(1, -1, 1));
     }
 
     public void RotateCounterClockwise()
     {
-        if (height == width)
-        {
-            return;
-        }
-        for (int i = 0; i < gameObject.transform.childCount; i++)
-        {
-            Vector3 temp = new Vector3(-gameObject.transform.GetChild(i).localPosition.y, gameObject.transform.GetChild(i).localPosition.x,
-                gameObject.transform.GetChild(i).localPosition.z);
-            gameObject.transform.GetChild(i).localPosition = temp;
-        }
+        Rotate(new Vector3(-1, 1, 1));
     }
 
     // check if  movement is valid for all children
@@ -193,7 +235,6 @@ public class Piece : MonoBehaviour {
 
     public void SetColor(Color color)
     {
-        Debug.Log(color);
         Renderer[] renders = gameObject.GetComponentsInChildren<Renderer>();
 
         foreach (var renderer in renders)

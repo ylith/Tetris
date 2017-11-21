@@ -19,7 +19,10 @@ public class Ticker : MonoBehaviour {
         if (_timeSinceUpdate >= (tickDuration / GameManager.instance.CurrentSpeed))
         {
             if (OnTick != null)
+            {
                 OnTick();
+            }
+
             _timeSinceUpdate -= (tickDuration / GameManager.instance.CurrentSpeed);
         }
     }

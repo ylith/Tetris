@@ -1,9 +1,16 @@
 Base path: F:/Unity/Editor/Data
 Cmd: initializeCompiler
 Cmd: disassembleShader
-  api=4 insize=650 outsize=1365 ok=1
+  api=4 insize=790 outsize=1657 ok=1
 Cmd: disassembleShader
-  api=4 insize=350 outsize=957 ok=1
-Unhandled exception: Protocol error - failed to read correct magic number
-
-Quitting shader compiler process
+  api=4 insize=690 outsize=1441 ok=1
+Cmd: disassembleShader
+  api=4 insize=298 outsize=868 ok=1
+Cmd: disassembleShader
+  api=4 insize=750 outsize=1581 ok=1
+Cmd: compileSnippet
+  error: 2 plat 1 at (74): variable 'o' used without having been completely initialized\nCompiling Vertex program
+Platform defines: UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA
+  api=1 type=0 insize=1234 outsize=0 kw= pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA ok=0
+Cmd: disassembleShader
+  api=4 insize=330 outsize=911 ok=1

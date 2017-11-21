@@ -20,7 +20,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4963108474699126}
   - component: {fileID: 114382598045630534}
-  - component: {fileID: 114893800386083960}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: GameController
@@ -57,18 +56,3 @@ MonoBehaviour:
   cubeSize: 1
   boardSize: {x: 10, y: 18}
   speed: 1
---- !u!114 &114893800386083960
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1222388778608476}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce5e6218ac34eaa4c9ba85fcb4ae681d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  minTickDuration: 0.05
-  maxTickDuration: 0.5
-  tickStep: 0.05
-  tickDuration: 0.5

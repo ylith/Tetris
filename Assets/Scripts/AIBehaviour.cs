@@ -4,16 +4,17 @@ using System.Collections.Generic;
 
 public class AIBehaviour {
 
+    private bool _isRunning = false;
     BoardManager boardManager;
     GameObject currentPiece;
     GameObject currentPieceCopy;
     Vector3 direction;
 
-    Dictionary<Vector3, Vector3Int> directions = new Dictionary<Vector3, Vector3Int>(); // keep best values for all directions
-    Dictionary<Vector3, int> rotations = new Dictionary<Vector3, int>(); // number of rotations for a direction
+    Dictionary<Vector3, List<Vector4>> directions = new Dictionary<Vector3, List<Vector4>>(); // keep best values for all directions
 
     public AIBehaviour()
     {
+        _isRunning = true;
         GameManager.OnPieceSpawn += OnPieceSpawn;
         Ticker.OnTick += MoveWithDirection;
         boardManager = new BoardManager(GameManager.instance.boardSize); // new custom board
@@ -24,16 +25,24 @@ public class AIBehaviour {
 
     void Stop()
     {
+        _isRunning = false;
         GameManager.OnPieceSpawn -= OnPieceSpawn;
+        Ticker.OnTick -= MoveWithDirection;
+        boardManager = null;
     }
 
     void OnPieceSpawn(GameObject obj)
     {
+        if ( ! _isRunning)
+        {
+            return;
+        }
+        if (! obj.GetComponent<Piece>().CanMoveInDirection(Vector3.zero)) //is valid position
+        {
+            return;
+        }
         boardManager._board = GameManager.instance.BoardManager._board.Clone() as GameObject[,]; // deep copy of board
         currentPiece = obj;
-        currentPieceCopy = GameObject.Instantiate(obj); // get a clone of current piece
-        currentPieceCopy.SetActive(false);
-        currentPieceCopy.GetComponent<Piece>().Interactable = false; // make it non interactable so it does not fire events
         AttemptMove();
         GameObject.Destroy(currentPieceCopy);
     }
@@ -41,7 +50,7 @@ public class AIBehaviour {
     // move with chosen direction on each tick
     void MoveWithDirection()
     {
-        if (direction.x != 0)
+        if (direction.x != 0 && _isRunning)
         {
             float x = direction.x / Mathf.Abs(direction.x);
             if (currentPiece.GetComponent<Piece>().CanMoveInDirection(new Vector3(x, 0.0f, 0.0f)))
@@ -58,99 +67,95 @@ public class AIBehaviour {
     void AttemptMove()
     {
         direction = Vector3.zero;
-        Vector3 origPos = currentPieceCopy.transform.position;
         Vector3 left = new Vector3(-1.0f, 0.0f, 0.0f);
         Vector3 right = new Vector3(1.0f, 0.0f, 0.0f);
-        directions = new Dictionary<Vector3, Vector3Int>();
-        rotations = new Dictionary<Vector3, int>();
+        Vector3 down = new Vector3(0.0f, -1.0f, 0.0f);
+        directions = new Dictionary<Vector3, List<Vector4>>();
+        currentPieceCopy = GameObject.Instantiate(currentPiece); // get a clone of current piece
+        currentPieceCopy.SetActive(false);
+        currentPieceCopy.GetComponent<Piece>().Interactable = false;
+        Piece script = currentPieceCopy.GetComponent<Piece>();// make it non interactable so it does not fire events
 
-        currentPieceCopy.transform.position = currentPiece.transform.position;
-
-        CheckMove(Vector3.zero); // check current position and all possible rotations
-        CheckMove(left); // check left position and all possible rotations
-        currentPieceCopy.transform.position = origPos; // reset to middle
-        CheckMove(right); // check right position and all possible rotations
+        for (int j = 0; j < 4; j++) // number of rotations
+        {
+            CheckMove(left, (int)Mathf.Abs(script.SmallestX), (int)currentPiece.transform.position.x, j);
+            CheckMove(right, (int)currentPiece.transform.position.x + 1, (int)(GameManager.instance.boardSize.x - script.LargestX), j);
+            script.RotateClockwise();
+        }
 
         // order directions by best potential to clear, then by least holes on the board, then by lowest column height
-        directions = directions.OrderByDescending(z => z.Value.z).ThenBy(x => x.Value.x).ThenBy(y => y.Value.y).ToDictionary(x => x.Key, x => x.Value);
-        direction = directions.First().Key;
-
-        for (int i = 0; i < rotations[direction]; i++)
+        //directions = directions.OrderBy(x => x.Value.x).ThenBy(y => y.Value.y).ToDictionary(x => x.Key, x => x.Value);
+        Vector4 test = new Vector4(0, 1000, 1000, 0);
+        foreach (KeyValuePair<Vector3, List<Vector4>> dir in directions)
+        {
+            foreach (var item in dir.Value)
+            {
+                if (item.x > test.x)
+                {
+                    test = item;
+                    direction = dir.Key;
+                } else if (item.x == test.x && item.y < test.y)
+                {
+                    test = item;
+                    direction = dir.Key;
+                } else if (item.x == test.x && item.y == test.y && item.z < test.z)
+                {
+                    test = item;
+                    direction = dir.Key;
+                }
+            }
+        }
+        
+        for (int i = 0; i < test.w; i++)
         {
             currentPiece.GetComponent<Piece>().RotateClockwise();
+            if (! currentPiece.GetComponent<Piece>().CanMoveInDirection(Vector3.zero))
+            {
+                Stop();
+            }
         }
     }
 
-    private void CheckMove(Vector3 dir)
+    private void CheckMove(Vector3 dir, int start, int end, int timesRotated = 0)
     {
         Vector3 down = new Vector3(0.0f, -1.0f, 0.0f);
         int times = 0;
-        Piece script = currentPieceCopy.GetComponent<Piece>();
 
-        while (script.CanMoveInDirection(dir, boardManager))
+        for (int i = start; i <= end; i++)
         {
-            script.Move(dir);
-            times++;
-            GameObject tempPiece = GameObject.Instantiate(currentPieceCopy); // make copy of current to test rotations
-            Piece tempScript = tempPiece.GetComponent<Piece>();
-            tempPiece.GetComponent<Piece>().Interactable = false;
-            tempPiece.name = "temp";
-            tempPiece.SetActive(false);
-            rotations[dir * times] = 0;
-            int rotate = tempScript.height == tempScript.width ? 1 : 4; // do not rotate if square
-            for (int i = 0; i < rotate; i++)
-            {
-                tempPiece.transform.position = currentPieceCopy.transform.position;
-                if (i != 0) // rotate only after current position is checked
-                {
-                    tempScript.RotateClockwise();
-                    while (! tempScript.CanMoveInDirection(Vector3.zero, boardManager) || ! tempScript.CanMoveInDirection(down, boardManager))
-                    {
-                        tempScript.RotateCounterClockwise();
-                        tempScript.Move(down);
-                        tempScript.RotateCounterClockwise(); //rotate back if move is invalid
-                    }
-                }
-                while (tempScript.CanMoveInDirection(down, boardManager))
-                {
-                    tempScript.Move(down); // go down and try to collide
-                }
-                
-                boardManager.AddObject(tempPiece);
-                int holes = boardManager.getHolesByColumn().Sum();
-                int highestY = boardManager.getHeightByColumn().Max();
-                int willClear = boardManager.getFullLines();
+            GameObject temp = GameObject.Instantiate(currentPieceCopy); // get a clone of current piece
+            temp.SetActive(false);
+            temp.GetComponent<Piece>().Interactable = false;
+            Piece script = temp.GetComponent<Piece>();
+            script.Move(dir * times);
 
-                // keep best values for direction
-                if (!directions.ContainsKey(dir * times))
-                {
-                    directions[dir * times] = new Vector3Int(holes, highestY, willClear);
-                    rotations[dir * times] = i;
-                } else if (willClear > directions[dir * times].z)
-                {
-                    directions[dir * times] = new Vector3Int(holes, highestY, willClear);
-                    rotations[dir * times] = i;
-                }
-                else if (holes < directions[dir * times].x)
-                {
-                    directions[dir * times] = new Vector3Int(holes, highestY, willClear);
-                    rotations[dir * times] = i;
-                }
-                else if (highestY < directions[dir * times].y)
-                {
-                    directions[dir * times] = new Vector3Int(holes, highestY, willClear);
-                    rotations[dir * times] = i;
-                }
-                
-                boardManager._board = GameManager.instance.BoardManager._board.Clone() as GameObject[,];
-            }
-
-            GameObject.Destroy(tempPiece);
-
-            if (dir == Vector3.zero)
+            if (! script.CanMoveInDirection(Vector3.zero))
             {
                 break;
             }
+
+            while (script.CanMoveInDirection(down, boardManager))
+            {
+                script.Move(down); // go down and try to collide
+            }
+
+            boardManager.AddObject(temp);
+            int holes = boardManager.getHolesByColumn().Sum();
+            int highestY = boardManager.getHeightByColumn().Max();
+            int willClear = boardManager.getFullLines();
+
+            // keep best values for direction
+            if (!directions.ContainsKey(dir * times))
+            {
+                directions[dir * times] = new List<Vector4> { new Vector4(willClear, holes, highestY, timesRotated) };
+            } else
+            {
+                directions[dir * times].Add(new Vector4(willClear, holes, highestY, timesRotated));
+            }
+
+            boardManager._board = GameManager.instance.BoardManager._board.Clone() as GameObject[,];
+            times++;
+            GameObject.Destroy(temp);
         }
     }
 }

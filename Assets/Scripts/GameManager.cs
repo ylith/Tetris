@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour {
     private int currentSpeed = 1;
     private Spawner spawner;
     private bool keysEnabled = true;
+    private AIBehaviour ai;
 
     public static GameManager instance = null; //Singleton
 
@@ -78,15 +79,13 @@ public class GameManager : MonoBehaviour {
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKeyDown(KeyCode.DownArrow) && keysEnabled)
         {
-            CurrentSpeed += 1;
-            CurrentSpeed = Mathf.Min(CurrentSpeed, 5);
+            CurrentSpeed = 5;
         }
-        else if (Input.GetKeyUp(KeyCode.DownArrow))
+        else if (Input.GetKeyUp(KeyCode.DownArrow) && keysEnabled)
         {
-            CurrentSpeed -= 1;
-            CurrentSpeed = Mathf.Max(CurrentSpeed, 1);
+            CurrentSpeed = 1;
         }
     }
 
@@ -99,7 +98,7 @@ public class GameManager : MonoBehaviour {
         BoardManager = new BoardManager(boardSize);
         if (isAi)
         {
-            AIBehaviour ai = new AIBehaviour();
+            ai = new AIBehaviour();
             keysEnabled = false;
         }
         SpawnPrefab a = new SpawnPrefab();
@@ -149,7 +148,8 @@ public class GameManager : MonoBehaviour {
     {
         int height = obj.GetComponent<Piece>().height;
         int width = obj.GetComponent<Piece>().width;
-        obj.transform.position = new Vector3(Mathf.Round(boardSize.x / 2) + (0.5f * cubeSize), boardSize.y - (height + 0.5f) * cubeSize, -cubeSize);
+
+        obj.transform.position = new Vector3(Mathf.Round(boardSize.x / 2) + (0.5f * cubeSize), boardSize.y - obj.GetComponent<Piece>().LargestY * cubeSize -0.5f, -cubeSize);
         obj.GetComponent<Piece>().height = Mathf.RoundToInt(height);
         obj.GetComponent<Piece>().width = Mathf.RoundToInt(width);
 
@@ -157,14 +157,19 @@ public class GameManager : MonoBehaviour {
         {
             obj.GetComponent<Piece>().Deactivate();
             TriggerGameOver();
+            return;
         }
+
+        obj.SetActive(true);
     }
 
     private void TriggerGameOver()
     {
         _isRunning = false;
+        ai = null;
 
         if (OnGameOver != null)
             OnGameOver();
+
     }
 }
