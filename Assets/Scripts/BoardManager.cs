@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -62,25 +63,43 @@ public class BoardManager {
 
         if (linesToClear.Count() > 0)
         {
-            int timesShifted = 0; //shift rows for each clered row
-            foreach (var line in linesToClear)
+            Ticker ticker = Camera.main.GetComponent<Ticker>();
+            GameManager.instance.StartCoroutine(ShiftLinesRoutine(linesToClear, ticker.tickDuration / GameManager.instance.CurrentSpeed));
+        }
+    }
+
+    IEnumerator ShiftLinesRoutine(List<int> linesToShift, float delay)
+    {
+        while (delay > 0)
+        {
+            delay -= Time.deltaTime;
+            yield return null;
+        }
+
+        ShiftLines(linesToShift);
+    }
+
+    void ShiftLines(List<int> linesToShift)
+    {
+        Ticker ticker = Camera.main.GetComponent<Ticker>();
+        int timesShifted = 0; //shift rows for each clered row
+        foreach (var line in linesToShift)
+        {
+            for (int j = line + 1 - timesShifted; j < boardSize.y; j++)
             {
-                for (int j = line + 1 - timesShifted; j < boardSize.y; j++)
+                for (int i = 0; i < boardSize.x; i++)
                 {
-                    for (int i = 0; i < boardSize.x; i++)
+                    if (_board[i, j] != null)
                     {
-                        if (_board[i, j] != null)
-                        {
-                            _board[i, j].transform.position += new Vector3(0, -1, 0);
-                            _board[i, j - 1] = _board[i, j];
-                            _board[i, j] = null;
-                        }
+                        //_board[i, j].GetComponent<Block>().MoveWithDirection(new Vector3(0, -1, 0), ticker.tickDuration / GameManager.instance.CurrentSpeed);
+                        _board[i, j].transform.position += new Vector3(0, -1, 0);
+                        _board[i, j - 1] = _board[i, j];
+                        _board[i, j] = null;
                     }
                 }
-
-                timesShifted += 1;
             }
-            //_board = tempArray;
+
+            timesShifted += 1;
         }
     }
 
@@ -89,7 +108,7 @@ public class BoardManager {
         for (int i = 0; i < boardSize.x; i++)
         {
             Debug.Log("Destroying " + i + " " + line);
-            Object.Destroy(_board[i, line]);
+            _board[i, line].GetComponent<Block>().Delete();
             _board[i, line] = null;
         }
     }
